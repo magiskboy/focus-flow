@@ -1,0 +1,15 @@
+# Ignore artifacts:
+dist
+build
+coverage
+public
+
+# Ignore all dotfiles...
+.*
+
+# ...except these specific config files
+!.prettierrc
+!.eslintrc.cjs
+!.eslintrc.js
+!.eslintrc.json
+!eslint.config.js

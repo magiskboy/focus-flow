@@ -1,11 +1,7 @@
+import { Dashboard } from './features/dashboard/Dashboard';
+
 function App() {
-  return (
-    <div>
-      <h1 className="text-3xl font-bold underline">
-        Hello world!
-      </h1>
-    </div>
-  )
+  return <Dashboard />;
 }
 
-export default App
+export default App;
