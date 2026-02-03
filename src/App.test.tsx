@@ -2,9 +2,8 @@ import { render, screen } from '@testing-library/react';
 import App from './App';
 
 describe('App', () => {
-  it('renders headline', () => {
+  it('renders dashboard', () => {
     render(<App />);
-    const headline = screen.getByText(/Hello world!/i);
-    expect(headline).toBeInTheDocument();
+    expect(screen.getByText(/Dashboard/i)).toBeInTheDocument();
   });
 });

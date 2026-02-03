@@ -17,5 +17,17 @@ export default defineConfig({
     globals: true,
     environment: 'happy-dom',
     setupFiles: './src/test/setup.ts',
+    coverage: {
+      provider: 'istanbul',
+      reporter: ['text', 'text-summary', 'html', 'json-summary'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        'src/**/*.test.{ts,tsx}',
+        'src/**/*.spec.{ts,tsx}',
+        'src/test/**',
+        'src/main.tsx',
+        'src/types/**',
+      ],
+    },
   },
 });

@@ -37,6 +37,7 @@ export function Modal({ isOpen, onClose, title, children, className, width, heig
     <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6`}>
       {/* Backdrop */}
       <div
+        data-testid='modal-backdrop'
         className='absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-300'
         onClick={onClose}
       />
