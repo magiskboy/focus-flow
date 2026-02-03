@@ -1,19 +1,22 @@
 import { DndContext, PointerSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
-import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { useTasks } from '@/hooks/useTasks';
+import { useDashboardDnd } from './useDashboardDnd';
 import { DashboardToolbar } from './components/DashboardToolbar';
 import { TaskColumn } from './components/TaskColumn';
 import { TaskCard } from './components/TaskCard';
 import { CreateTaskDialog } from './components/CreateTaskDialog';
 import { TaskDetailDialog } from './components/TaskDetailDialog';
-import type { Task, TaskStatus } from '@/types/task';
 import { useState, useMemo } from 'react';
 import { useAtom } from 'jotai';
 import { selectedTaskIdAtom } from '@/store/atoms';
 
 export function Dashboard() {
   const { tasks, updateTaskStatus, reorderTasks } = useTasks();
-  const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const { activeTask, handleDragStart, handleDragEnd } = useDashboardDnd(
+    tasks,
+    updateTaskStatus,
+    reorderTasks,
+  );
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedTaskId] = useAtom(selectedTaskIdAtom);
   const [searchQuery, setSearchQuery] = useState('');
@@ -34,47 +37,6 @@ export function Dashboard() {
       return matchesSearch;
     });
   }, [tasks, searchQuery]);
-
-  const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-    const task = tasks.find((t) => t.id === active.id);
-    if (task) setActiveTask(task);
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (!over) {
-      setActiveTask(null);
-      return;
-    }
-
-    const activeId = active.id as string;
-    const overId = over.id as string;
-
-    // 1. Check if moving to a different column (droppable)
-    if (['todo', 'in-progress', 'completed'].includes(overId)) {
-      const activeTaskData = active.data.current?.task as Task;
-      if (activeTaskData && activeTaskData.status !== overId) {
-        updateTaskStatus(activeId, overId as TaskStatus);
-      }
-    }
-    // 2. Check if re-ordering within same column or moving next to another task
-    else if (activeId !== overId) {
-      const overTaskData = over.data.current?.task as Task;
-      const activeTaskData = active.data.current?.task as Task;
-
-      if (activeTaskData && overTaskData) {
-        // If different status, update status first
-        if (activeTaskData.status !== overTaskData.status) {
-          updateTaskStatus(activeId, overTaskData.status);
-        }
-      }
-      reorderTasks(activeId, overId);
-    }
-
-    setActiveTask(null);
-  };
 
   const tasksByStatus = useMemo(() => {
     return {

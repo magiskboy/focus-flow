@@ -43,6 +43,8 @@ export function TaskColumn({ id, title, tasks }: TaskColumnProps) {
 
       <div
         ref={setNodeRef}
+        data-testid='column-drop-target'
+        data-over={isOver ? 'true' : 'false'}
         className={cn(
           'flex-1 p-3 rounded-2xl border-2 border-dashed transition-all duration-200 overflow-y-auto min-h-[500px]',
           statusColors[id],
