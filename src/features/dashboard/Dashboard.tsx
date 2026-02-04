@@ -7,8 +7,6 @@ import { TaskCard } from './components/TaskCard';
 import { CreateTaskDialog } from './components/CreateTaskDialog';
 import { TaskDetailDialog } from './components/TaskDetailDialog';
 import { useState, useMemo } from 'react';
-import { useAtom } from 'jotai';
-import { selectedTaskIdAtom } from '@/store/atoms';
 
 export function Dashboard() {
   const { tasks, updateTaskStatus, reorderTasks } = useTasks();
@@ -18,7 +16,7 @@ export function Dashboard() {
     reorderTasks,
   );
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [selectedTaskId] = useAtom(selectedTaskIdAtom);
+  // selectedTaskId is intentionally unused here to cause Bug 4
   const [searchQuery, setSearchQuery] = useState('');
 
   const sensors = useSensors(
@@ -63,8 +61,8 @@ export function Dashboard() {
       {/* Create Task Dialog */}
       <CreateTaskDialog isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
 
-      {/* Task Detail Dialog */}
-      <TaskDetailDialog key={selectedTaskId || 'none'} />
+      {/* Task Detail Dialog - BUG 4: Missing key prop */}
+      <TaskDetailDialog />
 
       {/* Main Content */}
       <main className='flex-1 overflow-x-auto p-8'>

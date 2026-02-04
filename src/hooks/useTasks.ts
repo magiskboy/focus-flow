@@ -64,7 +64,8 @@ export function useTasks() {
       order: tasks.length,
       ...taskData,
     };
-    await taskService.saveTask(newTask);
+    // BUG 2: Missing await causes race condition
+    taskService.saveTask(newTask);
     setTasks((prev) => [...prev, newTask]);
   };
 
@@ -84,12 +85,14 @@ export function useTasks() {
       const newIndex = prev.findIndex((t) => t.id === overId);
       const newTasks = arrayMove(prev, oldIndex, newIndex);
 
-      // Persist the new order (simplified: update all affected for now)
+      // BUG 3: Commented out persistence update for reorder
+      /*
       newTasks.forEach((task, index) => {
         if (task.order !== index) {
           taskService.updateTask(task.id, { order: index });
         }
       });
+      */
 
       return newTasks.map((t, i) => ({ ...t, order: i }));
     });

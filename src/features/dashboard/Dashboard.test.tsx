@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent, within, act, waitFor } from '@testing-library/react';
 import { Provider as JotaiProvider } from 'jotai';
 import { createStore } from 'jotai/vanilla';
 import { Dashboard } from './Dashboard';
@@ -223,5 +223,33 @@ describe('Dashboard', () => {
     );
     expect(screen.getByRole('heading', { name: /Edit Task/i })).toBeInTheDocument();
     expect(screen.getByDisplayValue('Todo task')).toBeInTheDocument();
+  });
+
+  it('TaskDetailDialog should update state when switching between tasks', async () => {
+    const store = createStore();
+    store.set(tasksAtom, mockTasks);
+    store.set(selectedTaskIdAtom, '1');
+
+    render(
+      <JotaiProvider store={store}>
+        <Dashboard />
+      </JotaiProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('Todo task')).toBeInTheDocument();
+    });
+
+    // Select Task 2
+    act(() => {
+      store.set(selectedTaskIdAtom, '2');
+    });
+
+    // With bug (no key), it will FAIL here because it still shows 'Todo task'
+    // but the task data in the store is for Task 2.
+    // We expect it to show 'In progress task'.
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('In progress task')).toBeInTheDocument();
+    });
   });
 });

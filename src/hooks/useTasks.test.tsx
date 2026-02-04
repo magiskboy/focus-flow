@@ -121,4 +121,52 @@ describe('useTasks', () => {
     expect(result.current.tasks[0].id).toBe('b');
     expect(result.current.tasks[1].id).toBe('a');
   });
+
+  it('addTask should wait for taskService.saveTask to complete', async () => {
+    let resolveSave: (value: void | PromiseLike<void>) => void;
+    const savePromise = new Promise<void>((resolve) => {
+      resolveSave = resolve;
+    });
+    mocks.mockSaveTask.mockReturnValue(savePromise);
+
+    const { result } = renderHook(() => useTasks(), { wrapper });
+    await waitFor(() => expect(mocks.mockGetTasks).toHaveBeenCalled());
+
+    // Start add task
+    let addTaskResolved = false;
+    const taskPromise = result.current.addTask({ title: 'Async Task' }).then(() => {
+      addTaskResolved = true;
+    });
+
+    // Wait a tiny bit to allow microtasks to flush, but NOT enough for the savePromise to resolve
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // If Bug 2 exists (not awaiting), the taskPromise would have resolved because everything inside was sync
+    // In a healthy state (with await), it should still be pending here.
+    expect(addTaskResolved).toBe(false);
+
+    await act(async () => {
+      resolveSave!();
+      await taskPromise;
+    });
+
+    expect(addTaskResolved).toBe(true);
+  });
+
+  it('reorderTasks should update all tasks with their new order in database', async () => {
+    mocks.mockGetTasks.mockResolvedValue([
+      { id: 'a', title: 'A', status: 'todo', order: 0 },
+      { id: 'b', title: 'B', status: 'todo', order: 1 },
+    ]);
+    const { result } = renderHook(() => useTasks(), { wrapper });
+    await waitFor(() => expect(result.current.tasks.length).toBe(2));
+
+    await act(async () => {
+      await result.current.reorderTasks('a', 'b');
+    });
+
+    // Check if updateTask was called for both to ensure orders are persisted correctly
+    expect(mocks.mockUpdateTask).toHaveBeenCalledWith('b', { order: 0 });
+    expect(mocks.mockUpdateTask).toHaveBeenCalledWith('a', { order: 1 });
+  });
 });
