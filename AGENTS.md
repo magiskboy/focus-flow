@@ -51,6 +51,7 @@ You are an AI coding assistant helping to build **FocusFlow** (tasks-mgr), a pri
 
 ## Testing & Verification
 
+- Don't edit unit test. Always run `yarn test` to verify after do anything, if faild, let's explain for me and stop your work.
 - Since there are no explicit unit tests set up yet, **ALWAYS run `yarn build`** after making changes to ensure type safety and build correctness.
 - Fix all linting errors reported by `yarn lint`.
 
