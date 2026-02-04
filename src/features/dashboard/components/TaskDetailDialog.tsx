@@ -13,9 +13,11 @@ import {
   ChevronDown,
   AlignLeft,
   X,
+  Plus,
+  ListChecks,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
-import type { TaskStatus } from '@/types/task';
+import type { TaskStatus, Subtask } from '@/types/task';
 
 export function TaskDetailDialog() {
   const [selectedTask] = useAtom(selectedTaskAtom);
@@ -32,6 +34,15 @@ export function TaskDetailDialog() {
   const [status, setStatus] = useState<TaskStatus>(selectedTask?.status || 'todo');
   const [isStatusOpen, setIsStatusOpen] = useState(false);
 
+  // Subtask state
+  const [subtasks, setSubtasks] = useState<Subtask[]>(selectedTask?.subtasks || []);
+  const [newSubtaskInput, setNewSubtaskInput] = useState('');
+
+  // Subtask progress calculation
+  const completedCount = subtasks.filter((st) => st.completed).length;
+  const progressPercent =
+    subtasks.length > 0 ? Math.round((completedCount / subtasks.length) * 100) : 0;
+
   const handleClose = () => {
     setSelectedTaskId(null);
   };
@@ -46,6 +57,7 @@ export function TaskDetailDialog() {
       estimatedPomodoros,
       tags: tags.length > 0 ? tags : undefined,
       status,
+      subtasks: subtasks.length > 0 ? subtasks : undefined,
     });
 
     handleClose();
@@ -74,6 +86,52 @@ export function TaskDetailDialog() {
 
   const removeTag = (tagToRemove: string) => {
     setTags(tags.filter((t) => t !== tagToRemove));
+  };
+
+  const handleAddSubtask = async () => {
+    const trimmedInput = newSubtaskInput.trim();
+    if (!trimmedInput) return;
+
+    const newSubtask: Subtask = {
+      id: crypto.randomUUID(),
+      title: trimmedInput,
+      completed: false,
+    };
+
+    const updatedSubtasks = [...subtasks, newSubtask];
+    setSubtasks(updatedSubtasks);
+    setNewSubtaskInput('');
+
+    if (selectedTask) {
+      await updateTask(selectedTask.id, { subtasks: updatedSubtasks });
+    }
+  };
+
+  const handleToggleSubtask = async (subtaskId: string) => {
+    const updatedSubtasks = subtasks.map((st) =>
+      st.id === subtaskId ? { ...st, completed: !st.completed } : st,
+    );
+    setSubtasks(updatedSubtasks);
+
+    if (selectedTask) {
+      await updateTask(selectedTask.id, { subtasks: updatedSubtasks });
+    }
+  };
+
+  const handleDeleteSubtask = async (subtaskId: string) => {
+    const updatedSubtasks = subtasks.filter((st) => st.id !== subtaskId);
+    setSubtasks(updatedSubtasks);
+
+    if (selectedTask) {
+      await updateTask(selectedTask.id, { subtasks: updatedSubtasks });
+    }
+  };
+
+  const handleSubtaskKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddSubtask();
+    }
   };
 
   if (!selectedTask) return null;
@@ -250,6 +308,103 @@ export function TaskDetailDialog() {
                   className='flex-1 min-w-[80px] bg-transparent border-none p-0 text-[11px] font-medium text-slate-700 dark:text-slate-300 focus:ring-0'
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Checklist Section */}
+          <div className='flex flex-col gap-1.5'>
+            <div className='flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1'>
+              <div className='flex items-center gap-2'>
+                <ListChecks className='w-3 h-3' />
+                Checklist
+              </div>
+              {subtasks.length > 0 && (
+                <span className='text-[10px] font-medium text-slate-500 uppercase'>
+                  {completedCount}/{subtasks.length} completed
+                </span>
+              )}
+            </div>
+
+            <div className='bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-3 space-y-3'>
+              {/* Add Subtask Input */}
+              <div className='flex items-center gap-2'>
+                <Circle className='w-4 h-4 text-slate-300 shrink-0' />
+                <input
+                  type='text'
+                  value={newSubtaskInput}
+                  onChange={(e) => setNewSubtaskInput(e.target.value)}
+                  onKeyDown={handleSubtaskKeyDown}
+                  placeholder='Add a subtask...'
+                  className='flex-1 bg-transparent border-none p-0 text-sm text-slate-700 dark:text-slate-300 focus:ring-0 placeholder:text-slate-400'
+                />
+                <button
+                  type='button'
+                  onClick={handleAddSubtask}
+                  disabled={!newSubtaskInput.trim()}
+                  className='p-1 text-slate-400 hover:text-blue-500 disabled:opacity-30 disabled:hover:text-slate-400 transition-colors shrink-0'
+                >
+                  <Plus className='w-4 h-4' />
+                </button>
+              </div>
+
+              {/* Progress Bar */}
+              {subtasks.length > 0 && (
+                <div className='h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden'>
+                  <div
+                    className={cn(
+                      'h-full transition-all duration-300 rounded-full',
+                      progressPercent === 100 ? 'bg-emerald-500' : 'bg-blue-500',
+                    )}
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+              )}
+
+              {/* Subtasks List */}
+              {subtasks.length > 0 ? (
+                <div className='space-y-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar'>
+                  {subtasks.map((subtask) => (
+                    <div
+                      key={subtask.id}
+                      className={cn(
+                        'group flex items-center gap-2 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg px-1 transition-colors',
+                        subtask.completed && 'opacity-70',
+                      )}
+                    >
+                      <button
+                        type='button'
+                        onClick={() => handleToggleSubtask(subtask.id)}
+                        className='shrink-0 transition-colors hover:scale-110 active:scale-95'
+                      >
+                        {subtask.completed ? (
+                          <CheckCircle2 className='w-4 h-4 text-emerald-500' />
+                        ) : (
+                          <Circle className='w-4 h-4 text-slate-300 hover:text-slate-400' />
+                        )}
+                      </button>
+                      <span
+                        className={cn(
+                          'flex-1 text-sm text-slate-700 dark:text-slate-300',
+                          subtask.completed && 'line-through text-slate-500 dark:text-slate-500',
+                        )}
+                      >
+                        {subtask.title}
+                      </span>
+                      <button
+                        type='button'
+                        onClick={() => handleDeleteSubtask(subtask.id)}
+                        className='p-1 text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all shrink-0'
+                      >
+                        <Trash2 className='w-3 h-3' />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className='text-center py-4 text-xs text-slate-400 italic'>
+                  No subtasks yet
+                </div>
+              )}
             </div>
           </div>
         </div>
