@@ -16,8 +16,12 @@ const mockTask: Task = {
 
 vi.mock('@dnd-kit/core', () => ({
   useDroppable: vi.fn(() => ({
-    setNodeRef: () => {},
+    setNodeRef: vi.fn(),
     isOver: false,
+    active: null,
+    rect: { current: null },
+    node: { current: null },
+    over: null,
   })),
 }));
 
@@ -57,15 +61,23 @@ describe('TaskColumn', () => {
 
   it('applies drag-over styling when isOver is true', () => {
     vi.mocked(dndCore.useDroppable).mockReturnValue({
-      setNodeRef: () => {},
+      setNodeRef: vi.fn(),
       isOver: true,
+      active: null,
+      rect: { current: null },
+      node: { current: null },
+      over: null,
     });
     renderWithProvider(<TaskColumn id='todo' title='To Do' tasks={[mockTask]} />);
     const droppable = screen.getByTestId('column-drop-target');
     expect(droppable).toHaveAttribute('data-over', 'true');
     vi.mocked(dndCore.useDroppable).mockReturnValue({
-      setNodeRef: () => {},
+      setNodeRef: vi.fn(),
       isOver: false,
+      active: null,
+      rect: { current: null },
+      node: { current: null },
+      over: null,
     });
   });
 });
