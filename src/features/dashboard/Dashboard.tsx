@@ -16,7 +16,6 @@ export function Dashboard() {
     reorderTasks,
   );
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  // selectedTaskId is intentionally unused here to cause Bug 4
   const [searchQuery, setSearchQuery] = useState('');
 
   const sensors = useSensors(
@@ -61,7 +60,6 @@ export function Dashboard() {
       {/* Create Task Dialog */}
       <CreateTaskDialog isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
 
-      {/* Task Detail Dialog - BUG 4: Missing key prop */}
       <TaskDetailDialog />
 
       {/* Main Content */}
