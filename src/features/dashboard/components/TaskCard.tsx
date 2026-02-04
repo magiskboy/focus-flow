@@ -2,7 +2,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Task } from '@/types/task';
 import { cn } from '@/utils/cn';
-import { Calendar, CheckCircle2, Circle, Clock, Timer } from 'lucide-react';
+import { Calendar, CheckCircle2, Circle, Clock, Timer, CheckSquare } from 'lucide-react';
 import { useSetAtom } from 'jotai';
 import { selectedTaskIdAtom } from '@/store/atoms';
 
@@ -75,6 +75,12 @@ export function TaskCard({ task, isStatic = false }: TaskCardProps) {
           <div className='flex items-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400'>
             <Timer className='w-3 h-3' />
             {task.completedPomodoros || 0}/{task.estimatedPomodoros}
+          </div>
+        )}
+        {task.subtasks && task.subtasks.length > 0 && (
+          <div className='flex items-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400'>
+            <CheckSquare className='w-3 h-3' />
+            {task.subtasks.filter((s) => s.completed).length}/{task.subtasks.length}
           </div>
         )}
         <div className='flex-1' />

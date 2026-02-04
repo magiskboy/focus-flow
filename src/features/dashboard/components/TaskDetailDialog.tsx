@@ -13,9 +13,12 @@ import {
   ChevronDown,
   AlignLeft,
   X,
+  CheckSquare,
+  Square,
+  Plus,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
-import type { TaskStatus } from '@/types/task';
+import type { TaskStatus, Subtask } from '@/types/task';
 
 export function TaskDetailDialog() {
   const [selectedTask] = useAtom(selectedTaskAtom);
@@ -32,6 +35,10 @@ export function TaskDetailDialog() {
   const [status, setStatus] = useState<TaskStatus>(selectedTask?.status || 'todo');
   const [isStatusOpen, setIsStatusOpen] = useState(false);
 
+  // Subtasks local state
+  const [subtasks, setSubtasks] = useState<Subtask[]>(selectedTask?.subtasks || []);
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+
   const handleClose = () => {
     setSelectedTaskId(null);
   };
@@ -46,6 +53,7 @@ export function TaskDetailDialog() {
       estimatedPomodoros,
       tags: tags.length > 0 ? tags : undefined,
       status,
+      subtasks: subtasks.length > 0 ? subtasks : undefined,
     });
 
     handleClose();
@@ -74,6 +82,32 @@ export function TaskDetailDialog() {
 
   const removeTag = (tagToRemove: string) => {
     setTags(tags.filter((t) => t !== tagToRemove));
+  };
+
+  // Subtask handlers
+  const handleAddSubtask = (e: React.FormEvent | React.KeyboardEvent) => {
+    e.preventDefault();
+    const trimmed = newSubtaskTitle.trim();
+    if (!trimmed) return;
+
+    const newSubtask: Subtask = {
+      id: crypto.randomUUID(),
+      title: trimmed,
+      completed: false,
+    };
+
+    setSubtasks([...subtasks, newSubtask]);
+    setNewSubtaskTitle('');
+  };
+
+  const handleToggleSubtask = (subtaskId: string) => {
+    setSubtasks(
+      subtasks.map((st) => (st.id === subtaskId ? { ...st, completed: !st.completed } : st)),
+    );
+  };
+
+  const handleDeleteSubtask = (subtaskId: string) => {
+    setSubtasks(subtasks.filter((st) => st.id !== subtaskId));
   };
 
   if (!selectedTask) return null;
@@ -109,6 +143,12 @@ export function TaskDetailDialog() {
   ];
 
   const currentStatus = statusOptions.find((o) => o.value === status) || statusOptions[0];
+
+  // Calculate subtask progress
+  const completedSubtasks = subtasks.filter((st) => st.completed).length;
+  const totalSubtasks = subtasks.length;
+  const progressPercentage =
+    totalSubtasks > 0 ? Math.round((completedSubtasks / totalSubtasks) * 100) : 0;
 
   return (
     <Modal
@@ -266,6 +306,89 @@ export function TaskDetailDialog() {
             placeholder='Add more details...'
             className='w-full flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm text-slate-700 dark:text-slate-300 resize-none h-full'
           />
+        </div>
+
+        {/* Checklist Section */}
+        <div className='shrink-0 space-y-4'>
+          <div className='flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1'>
+            <CheckSquare className='w-3 h-3' />
+            Checklist
+          </div>
+
+          {/* Progress Bar */}
+          {totalSubtasks > 0 && (
+            <div className='space-y-2'>
+              <div className='flex items-center justify-between text-xs'>
+                <span className='font-medium text-slate-500 dark:text-slate-400'>Progress</span>
+                <span className='font-bold text-slate-700 dark:text-slate-300'>
+                  {completedSubtasks}/{totalSubtasks} ({progressPercentage}%)
+                </span>
+              </div>
+              <div className='h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden'>
+                <div
+                  className='h-full bg-blue-500 transition-all duration-300 ease-out'
+                  style={{ width: `${progressPercentage}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Subtasks List */}
+          <div className='space-y-2 max-h-60 overflow-y-auto'>
+            {subtasks.map((subtask) => (
+              <div
+                key={subtask.id}
+                className='group flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors'
+              >
+                <button
+                  type='button'
+                  onClick={() => handleToggleSubtask(subtask.id)}
+                  className='flex-shrink-0 text-slate-400 hover:text-blue-500 transition-colors'
+                >
+                  {subtask.completed ? (
+                    <CheckSquare className='w-4 h-4 text-emerald-500' />
+                  ) : (
+                    <Square className='w-4 h-4' />
+                  )}
+                </button>
+                <span
+                  className={cn(
+                    'flex-1 text-sm transition-all truncate',
+                    subtask.completed
+                      ? 'text-slate-400 dark:text-slate-500 line-through'
+                      : 'text-slate-700 dark:text-slate-300',
+                  )}
+                >
+                  {subtask.title}
+                </span>
+                <button
+                  type='button'
+                  onClick={() => handleDeleteSubtask(subtask.id)}
+                  className='opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-500 transition-all'
+                >
+                  <Trash2 className='w-4 h-4' />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Add Subtask Input */}
+          <div className='relative'>
+            <input
+              type='text'
+              value={newSubtaskTitle}
+              onChange={(e) => setNewSubtaskTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddSubtask(e);
+                }
+              }}
+              placeholder='+ Add a subtask...'
+              className='w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm'
+            />
+            <Plus className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400' />
+          </div>
         </div>
 
         <div className='shrink-0 space-y-6'>
