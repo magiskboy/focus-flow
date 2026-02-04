@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAtom } from 'jotai';
 import { selectedTaskIdAtom, selectedTaskAtom } from '@/store/atoms';
 import { Modal } from '@/components';
@@ -31,6 +31,19 @@ export function TaskDetailDialog() {
   const [tagInput, setTagInput] = useState('');
   const [status, setStatus] = useState<TaskStatus>(selectedTask?.status || 'todo');
   const [isStatusOpen, setIsStatusOpen] = useState(false);
+
+  // Sync form state when selectedTask changes
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (selectedTask) {
+      setTitle(selectedTask.title || '');
+      setDescription(selectedTask.description || '');
+      setEstimatedPomodoros(selectedTask.estimatedPomodoros || 1);
+      setTags(selectedTask.tags || []);
+      setStatus(selectedTask.status || 'todo');
+    }
+  }, [selectedTask]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleClose = () => {
     setSelectedTaskId(null);

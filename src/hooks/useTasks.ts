@@ -64,7 +64,7 @@ export function useTasks() {
       order: tasks.length,
       ...taskData,
     };
-    taskService.saveTask(newTask);
+    await taskService.saveTask(newTask);
     setTasks((prev) => [...prev, newTask]);
   };
 
@@ -79,13 +79,19 @@ export function useTasks() {
   };
 
   const reorderTasks = async (activeId: string, overId: string) => {
+    let newOrderTasks: Task[] = [];
     setTasks((prev) => {
       const oldIndex = prev.findIndex((t) => t.id === activeId);
       const newIndex = prev.findIndex((t) => t.id === overId);
       const newTasks = arrayMove(prev, oldIndex, newIndex);
-
-      return newTasks.map((t, i) => ({ ...t, order: i }));
+      newOrderTasks = newTasks.map((t, i) => ({ ...t, order: i }));
+      return newOrderTasks;
     });
+
+    // Persist new order to IndexedDB
+    for (const task of newOrderTasks) {
+      await taskService.updateTask(task.id, { order: task.order });
+    }
   };
 
   const deleteTask = async (taskId: string) => {
