@@ -6,6 +6,7 @@
 
 ## 2. Fix
 
-- Plan stage: Dựa vào prompts/fix-glm-error.md để lập kế hoạch sửa lỗi GLM.
+- Checkout sang nhánh bug.
+- Plan stage: Dựa vào prompts/bug.md để lập kế hoạch sửa lỗi, kết quả xuất ra file plan_bug.md.
 - Tạo new chat.
-- Implementation stage: Dựa vào kế hoạch đã lập plan_fix_glm.md để sửa lỗi GLM.
+- Implementation stage: Dựa vào kế hoạch đã lập plan_bug.md để sửa lỗi.
