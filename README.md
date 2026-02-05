@@ -7,6 +7,6 @@
 ## 2. Fix
 
 - Checkout sang nhánh bug.
-- Plan stage: Dựa vào prompts/bug.md để lập kế hoạch sửa lỗi, kết quả xuất ra file plan_bug.md.
+- Plan stage: Hãy khoanh vùng, tìm vị trí và xác định root cause của các bug trong prompts/bug.md. Sau đó, ghi suy luận, nguyên nhân và giải pháp ngắn gọn, súc tích ra file plan_fix_bug.md (Không sử dụng emoji, sử dụng plaintext format). Hãy chạy yarn test để kiểm tra unit test
 - Tạo new chat.
-- Implementation stage: Dựa vào kế hoạch đã lập plan_bug.md để sửa lỗi.
+- Implementation stage: Dựa vào plan_fix_bug.md, hãy thực hiện sửa lỗi. Hãy chạy yarn test để kiểm tra unit test trước và sau khi fix bug
